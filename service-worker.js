@@ -1,10 +1,14 @@
 // ============================================================================
-// Service Worker - שומר את קבצי האפליקציה (app shell) במטמון כדי שהאפליקציה
-// תיפתח ותפעל גם ללא אינטרנט. קריאות רשת לשרת (Apps Script/Tranzila) לא נשמרות
-// במטמון ועוברות ישירות לרשת - הטיפול באופליין עבורן נעשה בקוד האפליקציה עצמו.
+// Service Worker - מאפשר לאפליקציה לפעול גם ללא אינטרנט.
+// אסטרטגיה: קודם מנסים רשת (כדי שגרסה חדשה תופיע מיד כשיש אינטרנט), ורק אם
+// אין חיבור - חוזרים לגרסה השמורה במטמון. קריאות לשרת (Apps Script/Tranzila)
+// לא נשמרות במטמון כלל ועוברות תמיד ישירות לרשת.
+//
+// *** חשוב: יש להעלות מספר גרסה כאן (CACHE_NAME) בכל פעם שמפרסמים עדכון,
+// כדי שמכשירים שכבר התקינו את ה-Service Worker הקודם ינקו את המטמון הישן. ***
 // ============================================================================
 
-const CACHE_NAME = "tikbulim-cache-v1";
+const CACHE_NAME = "tikbulim-cache-v2";
 
 const APP_SHELL = [
   "./",
@@ -46,15 +50,12 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match("./index.html"));
-    })
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html")))
   );
 });
