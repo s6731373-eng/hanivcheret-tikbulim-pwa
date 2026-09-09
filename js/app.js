@@ -10,6 +10,16 @@ let draft = null; // התקבול שבתהליך מילוי
 
 function el(id) { return document.getElementById(id); }
 
+// מאפשר להתקדם גם בלחיצת Enter/Go במקלדת, לא רק בהקשה על כפתור "הבא"
+function bindEnterToAdvance(inputEl, advanceFn) {
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      advanceFn();
+    }
+  });
+}
+
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => (s.hidden = true));
   el(id).hidden = false;
@@ -100,11 +110,11 @@ function newDraft() {
 function startAddReceipt() {
   draft = newDraft();
   navStack = [];
-  onBehalfChoice = "";
   el("input-pania").value = "";
   el("input-customer-name").value = "";
   el("customer-name-wrap").hidden = true;
-  selectOnBehalfButton("");
+  el("onbehalf-bottom-bar").hidden = true;
+  ["btn-onbehalf-pania", "btn-onbehalf-customer"].forEach((id) => el(id).classList.remove("primary"));
   el("input-amount").value = "";
   el("input-id-number").value = "";
   goTo("screen-pania");
@@ -114,7 +124,7 @@ function startAddReceipt() {
 // 1. פאנית מפנה
 // ---------------------------------------------------------------------------
 
-el("btn-pania-next").addEventListener("click", () => {
+function commitPaniaAndAdvance() {
   const value = el("input-pania").value.trim();
   if (!value) {
     el("input-pania").focus();
@@ -122,54 +132,51 @@ el("btn-pania-next").addEventListener("click", () => {
   }
   draft.referringPania = value;
   goTo("screen-onbehalf");
-});
+}
+
+el("btn-pania-next").addEventListener("click", commitPaniaAndAdvance);
+bindEnterToAdvance(el("input-pania"), commitPaniaAndAdvance);
 
 // ---------------------------------------------------------------------------
 // 2. על שם מי
 // ---------------------------------------------------------------------------
 
-let onBehalfChoice = "";
-
+// "על שם הפאנית המפנה" היא תשובה שלמה בפני עצמה - עוברים למסך הבא מיד, בלי כפתור "הבא" נוסף.
 el("btn-onbehalf-pania").addEventListener("click", () => {
-  onBehalfChoice = "פאנית מפנה";
-  el("customer-name-wrap").hidden = true;
-  selectOnBehalfButton("btn-onbehalf-pania");
-});
-
-el("btn-onbehalf-customer").addEventListener("click", () => {
-  onBehalfChoice = "לקוחה";
-  el("customer-name-wrap").hidden = false;
-  el("input-customer-name").focus();
-  selectOnBehalfButton("btn-onbehalf-customer");
-});
-
-function selectOnBehalfButton(activeId) {
-  ["btn-onbehalf-pania", "btn-onbehalf-customer"].forEach((id) => {
-    el(id).classList.toggle("primary", id === activeId);
-  });
-}
-
-el("btn-onbehalf-next").addEventListener("click", () => {
-  if (!onBehalfChoice) return;
-  if (onBehalfChoice === "לקוחה") {
-    const name = el("input-customer-name").value.trim();
-    if (!name) {
-      el("input-customer-name").focus();
-      return;
-    }
-    draft.customerName = name;
-  } else {
-    draft.customerName = "";
-  }
-  draft.onWhoseBehalf = onBehalfChoice;
+  draft.onWhoseBehalf = "פאנית מפנה";
+  draft.customerName = "";
   goTo("screen-amount");
 });
+
+// "על שם לקוחה" דורשת עוד שדה טקסט - חושפים אותו ומציגים כפתור "הבא" לאישור השם.
+el("btn-onbehalf-customer").addEventListener("click", () => {
+  el("customer-name-wrap").hidden = false;
+  el("onbehalf-bottom-bar").hidden = false;
+  el("input-customer-name").focus();
+  ["btn-onbehalf-pania", "btn-onbehalf-customer"].forEach((id) => {
+    el(id).classList.toggle("primary", id === "btn-onbehalf-customer");
+  });
+});
+
+function commitCustomerNameAndAdvance() {
+  const name = el("input-customer-name").value.trim();
+  if (!name) {
+    el("input-customer-name").focus();
+    return;
+  }
+  draft.onWhoseBehalf = "לקוחה";
+  draft.customerName = name;
+  goTo("screen-amount");
+}
+
+el("btn-onbehalf-next").addEventListener("click", commitCustomerNameAndAdvance);
+bindEnterToAdvance(el("input-customer-name"), commitCustomerNameAndAdvance);
 
 // ---------------------------------------------------------------------------
 // 3. סכום
 // ---------------------------------------------------------------------------
 
-el("btn-amount-next").addEventListener("click", () => {
+function commitAmountAndAdvance() {
   const raw = el("input-amount").value.replace(/[^\d.]/g, "");
   const amount = parseFloat(raw);
   if (!amount || amount <= 0) {
@@ -182,13 +189,16 @@ el("btn-amount-next").addEventListener("click", () => {
   } else {
     goToPaymentScreen();
   }
-});
+}
+
+el("btn-amount-next").addEventListener("click", commitAmountAndAdvance);
+bindEnterToAdvance(el("input-amount"), commitAmountAndAdvance);
 
 // ---------------------------------------------------------------------------
 // 4. תעודת זהות
 // ---------------------------------------------------------------------------
 
-el("btn-id-next").addEventListener("click", () => {
+function commitIdNumberAndAdvance() {
   const value = el("input-id-number").value.trim();
   if (!value) {
     el("input-id-number").focus();
@@ -196,7 +206,10 @@ el("btn-id-next").addEventListener("click", () => {
   }
   draft.idNumber = value;
   goToPaymentScreen();
-});
+}
+
+el("btn-id-next").addEventListener("click", commitIdNumberAndAdvance);
+bindEnterToAdvance(el("input-id-number"), commitIdNumberAndAdvance);
 
 // ---------------------------------------------------------------------------
 // 5. אמצעי תשלום
@@ -248,10 +261,11 @@ el("btn-credit-now").addEventListener("click", async () => {
     el("credit-offline-msg").hidden = false;
     return;
   }
+  // status נשאר "draft" בכוונה - לא רוצים לסנכרן לשרת לפני שידוע סופית אם הסליקה הצליחה
   draft.paymentDetails = { mode: "עכשיו" };
   draft.paymentStatus = "ממתין לתוצאת סליקה";
-  await DB.dbPut(draft); // שמירה מקומית לפני יציאה למסוף, כדי שהדיווח לא יאבד
-  TRANZILA.goToTranzilaTerminal(draft);
+  await DB.dbPut(draft); // שמירה מקומית לפני יציאה לעמוד הסליקה, כדי שהדיווח לא יאבד
+  TRANZILA.goToTranzilaTerminal();
 });
 
 el("btn-credit-later").addEventListener("click", () => {
@@ -337,14 +351,17 @@ el("btn-checks-next").addEventListener("click", () => {
 // 5ג. העברה בנקאית
 // ---------------------------------------------------------------------------
 
-el("btn-transfer-next").addEventListener("click", () => {
+function commitTransferAndAdvance() {
   const date = el("input-transfer-date").value;
   if (!date) return;
   draft.paymentDetails = { transferDate: date };
   draft.paymentStatus = "שולם";
   goTo("screen-review");
   renderReview();
-});
+}
+
+el("btn-transfer-next").addEventListener("click", commitTransferAndAdvance);
+bindEnterToAdvance(el("input-transfer-date"), commitTransferAndAdvance);
 
 // ---------------------------------------------------------------------------
 // 6. בדיקה ואישור
@@ -434,6 +451,38 @@ window.addEventListener("online", updateOfflineBanner);
 window.addEventListener("offline", updateOfflineBanner);
 
 // ---------------------------------------------------------------------------
+// חזרה מעמוד הסליקה של טרנזילה
+// ---------------------------------------------------------------------------
+// עמוד הסליקה בפועל לא מחזיר אותנו לאפליקציה עם תוצאה (לא Terminal API) - אז לפי
+// ההחלטה המקורית, עצם החזרה של המשווקת לאפליקציה נחשבת הוכחת הצלחה. בכל פעם שהאפליקציה
+// עולה/חוזרת לפוקוס, בודקים אם יש דיווח שממתין לתוצאת סליקה ומסמנים אותו כשולם.
+
+async function finalizePendingTranzilaIfAny() {
+  const all = await DB.dbGetAll();
+  const pending = all.find((r) => r.paymentStatus === "ממתין לתוצאת סליקה");
+  if (!pending) return;
+
+  pending.paymentStatus = "שולם";
+  pending.status = "pending";
+  pending.submittedAt = new Date().toISOString();
+
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_SALESPERSON) || "null");
+  if (saved) {
+    currentSalesperson = saved;
+    el("home-salesperson-name").textContent = currentSalesperson.name;
+  }
+
+  draft = pending;
+  await API.saveReceipt(pending);
+  showDoneScreen();
+}
+
+window.addEventListener("pageshow", finalizePendingTranzilaIfAny);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") finalizePendingTranzilaIfAny();
+});
+
+// ---------------------------------------------------------------------------
 // אתחול
 // ---------------------------------------------------------------------------
 
@@ -444,28 +493,11 @@ async function init() {
     navigator.serviceWorker.register("service-worker.js").catch(() => {});
   }
 
-  // חזרה ממסוף הסליקה של טרנזילה
-  const tranzilaResult = TRANZILA.checkTranzilaReturn();
-  if (tranzilaResult) {
-    const receipt = await DB.dbGet(tranzilaResult.receiptId);
-    if (receipt) {
-      receipt.paymentStatus = tranzilaResult.success ? "שולם" : "נכשל - יש לנסות שוב";
-      receipt.paymentDetails = {
-        mode: "עכשיו",
-        confirmationCode: tranzilaResult.confirmationCode,
-        last4: tranzilaResult.last4,
-      };
-      receipt.status = "pending";
-      draft = receipt;
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_SALESPERSON) || "null");
-      if (saved) {
-        currentSalesperson = saved;
-        el("home-salesperson-name").textContent = currentSalesperson.name;
-      }
-      await API.saveReceipt(receipt);
-      showDoneScreen();
-      return;
-    }
+  const all = await DB.dbGetAll();
+  const pendingTranzila = all.find((r) => r.paymentStatus === "ממתין לתוצאת סליקה");
+  if (pendingTranzila) {
+    await finalizePendingTranzilaIfAny();
+    return;
   }
 
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_SALESPERSON) || "null");
