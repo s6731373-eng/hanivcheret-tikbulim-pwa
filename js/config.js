@@ -16,12 +16,11 @@ const CONFIG = {
   // כתובת מייל קבועה של המזכירות - מקבלת עותק מכל תקבול
   OFFICE_EMAIL: "office@example.com",
 
-  // קישור למסוף הסליקה של Tranzila.
-  // *** יש להחליף בקישור האמיתי כשיתקבל מהחברה - זהו רק Placeholder לצורכי פיתוח ***
-  // הפרמטרים הנפוצים בטרמינל המתארח (Hosted Page) של טרנזילה הם בערך הזה:
-  //   sum            - סכום העסקה
-  //   currency        - 1 = שקל
-  //   success_url_address / fail_url_address - הפניה חזרה לאחר הסליקה (מוגדר גם בפאנל טרנזילה עצמו)
-  // יש לוודא מול טרנזילה את שמות הפרמטרים המדויקים בעת קבלת הקישור הסופי.
-  TRANZILA_TERMINAL_URL: "https://direct.tranzila.com/PASTE_YOUR_TERMINAL_NAME_HERE/iframenew.php",
+  // קישור למסוף הסליקה של Tranzila (התקבל מהחברה).
+  // *** לב שימת: זהו קישור מסוג pay.tranzila.com/crmnew/... - "עמוד תשלום" מוכן מראש מה-CRM
+  // של טרנזילה, בשונה מ-Terminal API רגיל (direct.tranzila.com/.../iframenew.php).
+  // לא ברור עדיין אם עמוד כזה תומך בהעברת סכום דינמית דרך פרמטרים ב-URL (sum=...) -
+  // יש לבדוק בפועל מול טרנזילה/בהרצת בדיקה: האם הסכום מוזן אוטומטית מהקישור,
+  // או שהלקוחה/המשווקת תצטרך להזין אותו ידנית בעמוד הסליקה עצמו.
+  TRANZILA_TERMINAL_URL: "https://pay.tranzila.com/crmnew/TVI1L3NJU2k1d054VUliQjN0QzZDQT09",
 };
