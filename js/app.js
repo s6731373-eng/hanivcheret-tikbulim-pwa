@@ -297,7 +297,6 @@ function addCheckRow() {
 
   const dateInput = document.createElement("input");
   dateInput.type = "date";
-  dateInput.value = new Date().toISOString().slice(0, 10);
   dateInput.addEventListener("input", updateChecksSummary);
 
   const removeBtn = document.createElement("button");
@@ -320,9 +319,11 @@ el("btn-add-check").addEventListener("click", addCheckRow);
 function updateChecksSummary() {
   const rows = Array.from(el("checks-list").querySelectorAll(".check-row"));
   let entered = 0;
+  let allDatesFilled = true;
   rows.forEach((row) => {
     const val = parseFloat(row.querySelector('input[type="tel"]').value) || 0;
     entered += val;
+    if (!row.querySelector('input[type="date"]').value) allDatesFilled = false;
   });
   const total = draft.amount;
   const remaining = total - entered;
@@ -331,7 +332,7 @@ function updateChecksSummary() {
   el("checks-entered-amount").textContent = entered.toLocaleString("he-IL");
   el("checks-remaining-amount").textContent = remaining.toLocaleString("he-IL");
 
-  const matches = Math.abs(remaining) < 0.01 && entered > 0;
+  const matches = Math.abs(remaining) < 0.01 && entered > 0 && allDatesFilled;
   el("btn-checks-next").disabled = !matches;
 }
 
@@ -412,8 +413,6 @@ el("btn-confirm-save").addEventListener("click", async () => {
 // ---------------------------------------------------------------------------
 
 function showDoneScreen() {
-  const waText = buildWhatsappMessage(draft);
-  el("btn-whatsapp").href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
   navStack = ["screen-done"];
   showScreen("screen-done");
   setTimeout(() => {
@@ -421,11 +420,6 @@ function showDoneScreen() {
       goHome();
     }
   }, 2000);
-}
-
-function buildWhatsappMessage(receipt) {
-  const who = receipt.onWhoseBehalf === "לקוחה" ? receipt.customerName : receipt.referringPania;
-  return `תקבול נקלט עבור ${who}\nסכום: ${receipt.amount.toLocaleString("he-IL")} ₪\nאמצעי תשלום: ${receipt.paymentMethod}\nתודה, הנבחרת`;
 }
 
 // ---------------------------------------------------------------------------
