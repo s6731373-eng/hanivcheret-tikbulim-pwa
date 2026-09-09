@@ -1,0 +1,18 @@
+{
+  "name": "הנבחרת - תקבולים",
+  "short_name": "תקבולים",
+  "description": "רישום תקבולים עבור משווקות שדה של הנבחרת",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F5FA",
+  "theme_color": "#5B3A8E",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>הנבחרת - תקבולים</title>
+<meta name="theme-color" content="#5B3A8E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- באנר "אין אינטרנט" -->
+  <div id="offline-banner" class="offline-banner" hidden>אין כרגע אינטרנט. הדיווחים נשמרים ויישלחו אוטומטית כשיתאפשר.</div>
+
+  <!-- ============ מסך התחברות ראשונית ============ -->
+  <section class="screen" id="screen-login" hidden>
+    <div class="screen-inner">
+      <h1 class="title">ברוכה הבאה</h1>
+      <p class="subtitle">הזיני את שמך וכתובת המייל שלך - יישמרו במכשיר ולא תצטרכי להזין שוב.</p>
+      <label class="field-label" for="input-login-name">שם מלא</label>
+      <input type="text" class="big-input" id="input-login-name" placeholder="שם מלא" autocomplete="name">
+      <label class="field-label" for="input-login-email">כתובת מייל</label>
+      <input type="email" class="big-input" id="input-login-email" placeholder="כתובת מייל" autocomplete="email" inputmode="email">
+      <p class="warning-text" id="login-error" hidden>יש למלא שם וכתובת מייל תקינה.</p>
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-login-submit">כניסה</button>
+    </div>
+  </section>
+
+  <!-- ============ מסך הבית ============ -->
+  <section class="screen" id="screen-home" hidden>
+    <div class="screen-inner home-inner">
+      <h1 class="title">שלום, <span id="home-salesperson-name"></span></h1>
+      <div class="home-buttons">
+        <button class="big-button primary" id="btn-add-receipt">הוספת תקבול</button>
+        <button class="big-button disabled" id="btn-add-sale" disabled>הוספת מכירה<br><span class="soon-label">בקרוב</span></button>
+      </div>
+      <button class="link-button" id="btn-switch-user">החלפת משתמשת</button>
+    </div>
+  </section>
+
+  <!-- ============ שורת ניווט קבועה לתהליך התקבול ============ -->
+  <div class="flow-nav" id="flow-nav" hidden>
+    <button class="nav-btn back" id="btn-back">חזרה</button>
+  </div>
+
+  <!-- ============ 1. פאנית מפנה ============ -->
+  <section class="screen flow-screen" id="screen-pania" hidden>
+    <div class="screen-inner">
+      <h1 class="title">פאנית מפנה</h1>
+      <p class="subtitle">מהי הפאנית שמפנה את התקבול?</p>
+      <input type="text" class="big-input" id="input-pania" placeholder="שם הפאנית" autocomplete="off">
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-pania-next">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ 2. על שם מי ============ -->
+  <section class="screen flow-screen" id="screen-onbehalf" hidden>
+    <div class="screen-inner">
+      <h1 class="title">על שם מי לרשום את התקבול?</h1>
+      <div class="button-list">
+        <button class="big-button choice" id="btn-onbehalf-pania">על שם הפאנית המפנה</button>
+        <button class="big-button choice" id="btn-onbehalf-customer">על שם לקוחה</button>
+      </div>
+      <div id="customer-name-wrap" class="reveal-field" hidden>
+        <label class="field-label" for="input-customer-name">שם הלקוחה</label>
+        <input type="text" class="big-input" id="input-customer-name" placeholder="שם הלקוחה" autocomplete="off">
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-onbehalf-next">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ 3. סכום ============ -->
+  <section class="screen flow-screen" id="screen-amount" hidden>
+    <div class="screen-inner">
+      <h1 class="title">סכום התקבול</h1>
+      <input type="tel" inputmode="numeric" class="big-input amount-input" id="input-amount" placeholder="0" autocomplete="off">
+      <div class="unit-label">₪</div>
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-amount-next">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ 4. תעודת זהות ============ -->
+  <section class="screen flow-screen" id="screen-id" hidden>
+    <div class="screen-inner">
+      <h1 class="title">תעודת זהות</h1>
+      <p class="subtitle">סכום התקבול מחייב רישום תעודת זהות.</p>
+      <input type="tel" inputmode="numeric" class="big-input" id="input-id-number" placeholder="מספר תעודת זהות" autocomplete="off">
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-id-next">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ 5. אמצעי תשלום ============ -->
+  <section class="screen flow-screen" id="screen-payment" hidden>
+    <div class="screen-inner">
+      <h1 class="title">אמצעי תשלום</h1>
+      <div class="payment-grid">
+        <button class="big-button payment-option" id="btn-pay-cash">מזומן</button>
+        <button class="big-button payment-option" id="btn-pay-credit">אשראי</button>
+        <button class="big-button payment-option" id="btn-pay-checks">צ'קים</button>
+        <button class="big-button payment-option" id="btn-pay-transfer">העברה בנקאית</button>
+      </div>
+      <p class="warning-text" id="cash-disabled-msg" hidden>לא ניתן לקבל סכום זה במזומן. יש לבחור אמצעי תשלום אחר.</p>
+    </div>
+  </section>
+
+  <!-- ============ 5א. אשראי - עכשיו / מאוחר יותר ============ -->
+  <section class="screen flow-screen" id="screen-credit-choice" hidden>
+    <div class="screen-inner">
+      <h1 class="title">מועד הסליקה</h1>
+      <div class="button-list">
+        <button class="big-button choice" id="btn-credit-now">לסליקה עכשיו</button>
+        <button class="big-button choice" id="btn-credit-later">לסליקה מאוחר יותר</button>
+      </div>
+      <p class="warning-text" id="credit-offline-msg" hidden>אין כרגע חיבור לאינטרנט. ניתן לשמור את התקבול ולבצע את הסליקה בהמשך.</p>
+    </div>
+  </section>
+
+  <!-- ============ 5ב. צ'קים ============ -->
+  <section class="screen flow-screen" id="screen-checks" hidden>
+    <div class="screen-inner">
+      <h1 class="title">פרטי צ'קים</h1>
+      <div class="checks-summary">
+        <div>סכום התקבול: <strong id="checks-total-amount">0</strong> ₪</div>
+        <div>הוזנו צ'קים: <strong id="checks-entered-amount">0</strong> ₪</div>
+        <div>נותר להזין: <strong id="checks-remaining-amount">0</strong> ₪</div>
+      </div>
+      <div id="checks-list"></div>
+      <button class="link-button" id="btn-add-check">+ הוספת צ'ק נוסף</button>
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-checks-next" disabled>הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ 5ג. העברה בנקאית ============ -->
+  <section class="screen flow-screen" id="screen-transfer" hidden>
+    <div class="screen-inner">
+      <h1 class="title">מתי בוצעה ההעברה?</h1>
+      <input type="date" class="big-input" id="input-transfer-date">
+    </div>
+    <div class="bottom-bar">
+      <button class="big-button primary" id="btn-transfer-next">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ 6. בדיקה ואישור ============ -->
+  <section class="screen flow-screen" id="screen-review" hidden>
+    <div class="screen-inner">
+      <h1 class="title">בדיקה ואישור</h1>
+      <div class="review-summary" id="review-summary"></div>
+    </div>
+    <div class="bottom-bar bottom-bar-double">
+      <button class="big-button primary" id="btn-confirm-save">אישור ושמירה</button>
+      <button class="big-button secondary" id="btn-review-back">חזרה לתיקון</button>
+    </div>
+  </section>
+
+  <!-- ============ 7. סיום ============ -->
+  <section class="screen" id="screen-done" hidden>
+    <div class="screen-inner done-inner">
+      <div class="checkmark">&#10003;</div>
+      <h1 class="title">התקבול נוסף בהצלחה!</h1>
+      <a class="big-button whatsapp-button" id="btn-whatsapp" target="_blank" rel="noopener">שליחה ללקוחה בוואטסאפ</a>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/api.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/tranzila.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
