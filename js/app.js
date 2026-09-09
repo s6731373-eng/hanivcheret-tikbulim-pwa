@@ -117,6 +117,7 @@ function startAddReceipt() {
   ["btn-onbehalf-pania", "btn-onbehalf-customer"].forEach((id) => el(id).classList.remove("primary"));
   el("input-amount").value = "";
   el("input-id-number").value = "";
+  el("id-number-error").hidden = true;
   goTo("screen-pania");
 }
 
@@ -200,7 +201,9 @@ bindEnterToAdvance(el("input-amount"), commitAmountAndAdvance);
 
 function commitIdNumberAndAdvance() {
   const value = el("input-id-number").value.trim();
-  if (!value) {
+  const isValid = /^\d{9}$/.test(value);
+  el("id-number-error").hidden = isValid;
+  if (!isValid) {
     el("input-id-number").focus();
     return;
   }
